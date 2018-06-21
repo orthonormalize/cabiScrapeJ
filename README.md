@@ -12,7 +12,18 @@ Capital Bikeshare provides its dock info via XML at https://feeds.capitalbikesha
 
 Without location services, I need to communicate my location. The street networks and postal addresses in both Arlington and DC are very regular, so I find it extremely easy to "guess" an address sufficiently close to any location, regardless of where I happen to be. (This is not the case in the suburbs!). I send this address over text.
 
-The app continuously monitors a Gmail inbox for emails from trusted senders that contain postal addresses. After verifying sender and message format, it constructs a response, consisting of the three nearest docking stations (by Euclidean distance), along with their location info and bike/dock availability. If either bikes or docks are scarce (0 or 1) at any of these three docks, the search is expanded until it finds three nearby stations that do have availability >= 2 bikes/docks, and a follow-on response is sent with that info.
+The app continuously monitors a Gmail inbox for emails from trusted senders that contain postal addresses. After verifying sender and message format, it finds the location and obtains its lat/lon from Google maps. Then it constructs a response, consisting of the three nearest docking stations (by Euclidean distance), including their bike/dock availability and some location info. If either bikes or docks happen to be scarce (0 or 1) at any of these three docks, the search is expanded until it finds three nearby stations that do have availability >= 2 bikes/docks, and a follow-on response is sent with that info.
+
+The output format is:
+distanceRank: (numBikes, numDocks) headingAngle distance, locationName
+
+## Example
+
+![screenshot](screenshot_SMS_Bikeshare_App.png?raw=true)
+
+I was recently at 9th and N NW and wanted to find a bike to ride home. So I made up an address in the 900 block of N St NW and submitted it. The nearest three docking stations are shown in my app's reply, but one of them has just one bike left and another one has no docks. So a second text is tacked on with another option. 
+
+
 
 ## Comments
 
