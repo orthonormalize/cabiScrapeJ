@@ -10,6 +10,8 @@ import httplib2
 from apiclient import discovery
 import re
 paramsFile = 'parameters00_cabiScrape.csv'
+locAK = 'Desktop/dev/gmap'
+fnAK = 'AK.txt'
 eu_eligChars = ''.join([chr(x) for x in ([45,46,95] + range(48,58) + range(64,91) + range(97,123))])
 sec_2_msec = 1000
 radiusEarth = 3959*5280 # feet
@@ -22,14 +24,14 @@ defaultNumRows2Display = 3 	# autoresponse output: how many rows are displayed a
 
 
 def defaultParams():
-    return {'time_readData':60,'time_checkPingbox':5,'bufferTime_readData':0.7,\
+    return {'time_readData':60,'time_checkPingbox':2,'bufferTime_readData':0.7,\
                     'time_retryPingboxAutoresponse':15,'time_maxRetrySendingPingboxResponse':130,\
                     'time_eStatus':44000,'time_eDump':43170,\
                     'size_eDump':25.0} 
                     
 def defaultNames():
     return {'eAddr':'','ePass':'','customerList':[],\
-        'customerListDir':'..','customerListFile':'customerList.csv',\
+        'customerListDir':'..','customerListFile':'../customerList.csv',\
         'scrapeURL':'https://feeds.capitalbikeshare.com/stations/stations.xml',\
         'dbBase':'dockHist_','staticTable':'static','dynamicTable':'dynamic',
         'eFailLogFile':'log_eFail.txt',\
@@ -280,6 +282,9 @@ def address2LatLong(addr,dfRecent):
 	ddd = {'address':addr}
 	sSB = {k:[str(b) for b in v] for (k,v) in serviceAreaBounds.items()}
 	ddd['bounds'] = sSB['lat'][0]+','+sSB['lon'][0]+'|'+sSB['lat'][1]+','+sSB['lon'][1]
+	with open(os.path.join(os.path.expanduser("~"),locAK,fnAK)) as f:
+		AK = f.readline()
+	ddd['key'] = AK
 	gReq = requests.get(urlBase_ReverseGeocode, params=ddd)
 	try:
 		gResult = gReq.json()
