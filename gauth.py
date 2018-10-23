@@ -20,10 +20,10 @@ import base64
 # If modifying these scopes, delete your previously saved credentials
 # at ~/.credentials/gmail-python-quickstart.json
 SCOPES = 'https://www.googleapis.com/auth/gmail.modify'
-CLIENT_SECRET_FILE = 'client_secret.json'
-APPLICATION_NAME = 'Gmail API Python Quickstart'
-dClientSecrets = {'pingbox':'client_secret_68.json',\
-					'datascraper':'client_secret_67.json'}
+CLIENT_SECRET_FILE = 'client_secret_7373.json'
+APPLICATION_NAME = 'cabi7373' #'Gmail API Python Quickstart'
+#dClientSecrets = {'pingbox':'client_secret_68.json',\
+#					'datascraper':'client_secret_67.json'}
 
 
 flags = None # don't use command line args / argparse
@@ -43,12 +43,13 @@ def get_credentials(json_subApp=''):
 	if not os.path.exists(credential_dir):
 		os.makedirs(credential_dir)
 	credential_path = os.path.join(credential_dir,
-								   'gmail-rw.json')
+								   'token-7373.json')
 
 	store = Storage(credential_path)
 	credentials = store.get()
 	if not credentials or credentials.invalid:
-		flow = client.flow_from_clientsecrets(CLIENT_SECRET_FILE, SCOPES)
+		print('Did not find valid Gmail OAuth credentials ...')
+		flow = client.flow_from_clientsecrets(os.path.join(credential_dir,CLIENT_SECRET_FILE), SCOPES)
 		flow.user_agent = APPLICATION_NAME
 		if flags:
 			credentials = tools.run_flow(flow, store, flags)
