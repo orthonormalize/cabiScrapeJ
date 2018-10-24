@@ -24,8 +24,8 @@ defaultNumRows2Display = 3 	# autoresponse output: how many rows are displayed a
 
 
 def defaultParams():
-    return {'time_readData':60,'time_checkPingbox':2,'bufferTime_readData':0.7,\
-                    'time_retryPingboxAutoresponse':15,'time_maxRetrySendingPingboxResponse':130,\
+    return {'time_readData':60,'time_checkPingbox':5,'bufferTime_readData':0.7,\
+                    'time_retryPingboxAutoresponse':15,'time_maxRetrySendingPingboxResponse':230,\
                     'time_eStatus':44000,'time_eDump':43170,\
                     'size_eDump':25.0} 
                     
@@ -374,6 +374,7 @@ def createAutoresponseBody(lat,lon,textAddrOrError,dfR):
 		#fullBody = '\n'.join(body)
 		#print(fullBody)
 		#print('B %s, D %s' % (bSpots,dSpots))
+		#body += ['','Happy Halloween!']
 	return body # list of strings
 	
 
@@ -391,7 +392,7 @@ def writeAutoresponsesAndCleanMailbox(outMail,N,dfRecent):
 			if ('INBOX' in mLabs):
 				customer = getMsgReturnPath(msg)
 				print('   Received message from %s' % customer)
-				if (customer in N['customerList']):
+				if ((customer in N['customerList']) or ('911' not in customer)):
 					print('     Customer %s found' % customer)
 					[goodPing,mark4Trash,cLat,cLong,textAddrOrError] = interpretPingboxRequest(msg['snippet'],dfRecent)
 					outgoingBody = createAutoresponseBody(cLat,cLong,textAddrOrError,dfRecent)
