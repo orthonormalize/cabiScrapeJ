@@ -353,6 +353,7 @@ def createAutoresponseBody(lat,lon,textAddrOrError,dfR):
 			dSpots += 1 if (psRow.nbemptydocks>=qLook) else 0
 			body += [str(1+j) + ': '+dfRow2autoresponseOutputString(psRow)]
 		jBase=j+1
+		j=jBase
 		if (bSpots<qUniqSta):
 			body += ['+B']
 			while ((bSpots<qUniqSta) and (j<len(dfR)-1)):
