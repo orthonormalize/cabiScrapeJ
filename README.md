@@ -21,7 +21,7 @@ distanceRank: (numBikes, numDocks) headingAngle distance, locationName
 
 ![screenshot](screenshot_SMS_Bikeshare_App.png?raw=true)
 
-I was recently at 9th and N NW and wanted to find a bike to ride home. So I made up an address in the 900 block of N St NW and submitted it. The nearest three docking stations are shown in my app's reply, but one of them has just one bike left and another one has no docks. So a second text is tacked on with another option. 
+I was recently at 9th and N NW and wanted to find a bike to ride home. So I made up an address in the 900 block of N St NW and submitted it. The closest CaBi station to the input address is at 8th and O Streets, 610 feet to the northeast. This station has nineteen bikes but zero empty docks and is thus completely full. The next closest station, 820 feet to the northwest at 11th and O, is well balanced with six bikes and twelve empty docks. The third-nearest station is Convention Center, which has just one bike. Because the three closest stations include one with a shortage of bikes and another with a shortage of docks, a second text is sent showing one more station with bikes and one more station with docks. In the present example, those turn out to be the same station: the fourth-nearest station, at 11th and M Streets, has seven bikes and twelve empty docks.
 
 
 
