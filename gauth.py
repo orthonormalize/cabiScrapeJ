@@ -12,9 +12,9 @@ from oauth2client import tools
 from oauth2client.file import Storage
 
 from email import mime
-#from email.mime.text import MIMEText
-#from email.mime.multipart import MIMEMultipart
-#from email.mime.base import MIMEbase
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
 import base64
 
 # If modifying these scopes, delete your previously saved credentials
@@ -69,11 +69,11 @@ def create_message(sender, to, subject, message_text, fileAttach=''):
 	  An object containing a base64url encoded email object.
 	"""
 	if ((os.path.isfile(fileAttach))):
-		msg = mime.multipart.MIMEMultipart()
+		msg = MIMEMultipart()
 		msg['From'] = sender
 		msg['To'] = to
 		msg['Subject'] = subject
-		msg.attach(mime.text.MIMEText(message_text, 'plain'))
+		msg.attach(MIMEText(message_text, 'plain'))
 		try: # if it's a big file, zip it up first:
 			if (os.path.getsize(fileAttach)>1e5): 
 				zipfilename = re.sub('\.\w+','.zip',fileAttach)
@@ -84,19 +84,19 @@ def create_message(sender, to, subject, message_text, fileAttach=''):
 		except:
 			pass
 		fp_attachment = open(fileAttach,"rb")
-		part = mime.base.MIMEBase('application', 'octet-stream')
+		part = MIMEBase('application', 'octet-stream')
 		part.set_payload((fp_attachment).read())
 		fp_attachment.close()
 		part.add_header('Content-Disposition', 'attachment', filename=fileAttach)
 		msg.attach(part)
 	else:
 		#msg = mime.text.MIMEText(message_text)
-		msg = mime.multipart.MIMEMultipart()
+		msg = MIMEMultipart()
 		msg['from'] = sender
 		msg['to'] = to
 		msg['subject'] = subject
-		msg.attach(mime.text.MIMEText(message_text, 'plain'))
-	return {'raw': base64.urlsafe_b64encode(msg.as_string())}
+		msg.attach(MIMEText(message_text, 'plain'))
+	return {'raw': base64.urlsafe_b64encode(msg.as_string().encode('utf-8')).decode("ascii")}
 
 
 
