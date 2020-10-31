@@ -502,7 +502,9 @@ try:
             # write new data:
             try:
                 [DF,dfS] = writeData2DB(DF,dfS,N,dumpCount,rawXML)
-            LT['time_readData'] = iterStartTime
+                LT['time_readData'] = iterStartTime
+            except:
+                pass
             # if time, email dump or send a beacon:
             if ((os.path.isfile(dbName(N,dumpCount)))  and  \
                 ((os.path.getsize(dbName(N,dumpCount))>1e6*P['size_eDump'])\
