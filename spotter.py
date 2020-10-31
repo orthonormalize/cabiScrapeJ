@@ -146,8 +146,20 @@ def sendGmail(errLog,sender,recipient,password,subject,body,fileAttach=''):
         # if e is file attachment, send an alert email. Else just print(e)
     return Q
 
-def get_data_gbfs(main_url):
-    pass
+def initialize_dataframe_from_gbfs(gbfs_url):
+    base_json = requests.get(gbfs_url).json()
+    feed_urls = {D['name']:D['url'] for D in base_json['data']['en']['feeds']\
+                 if (('name' in D) and ('url' in D))}
+    station_info = pd.DataFrame(requests.get(feed_urls['station_information'])\
+                                .json()['data']['stations'])
+    station_status = pd.DataFrame(requests.get(feed_urls['station_status'])\
+                                .json()['data']['stations'])
+    df = station_info.merge(station_status,on='station_id')
+    colstarts_drop = ['eightd','external_id','legacy_id','rental_',\
+                          'has_kiosk','short_name','electric_bike_surcharge_waiver','station_type']
+    colstarts_drop.extend([c for cd in colstarts_drop for c in df.columns if c.startswith(cd)])
+    df.drop(colstarts_drop,axis=1,errors='ignore',inplace=True)
+    return(df)
     
 def getNewData(thisURL):
     # reads XML file, converts to pandas dataFrame. Each row is one station.
@@ -483,7 +495,20 @@ try:
     outgoingMail = []
     # initialize DF:
     
-    
+    # do a single full read here, creating DF
+    while True:
+        try:
+            df = initialize_dataframe_from_gbfs(N['gbfs_url'])
+            print(df.shape)
+            print('success')
+            h=5/0
+            break
+        except:
+            print('%.2f: Failed to retrieve GBFS data. Trying again in %.0f seconds...'\
+                              %(time.perf_counter(),P['time_checkPingbox']))
+            time.sleep(P['time_checkPingbox'])
+    # then during main loop, we will just update station_status
+    print('got here')
     
     # main loop
     while True:
