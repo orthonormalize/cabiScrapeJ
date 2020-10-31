@@ -6,6 +6,7 @@ import sqlite3
 import os
 from bs4 import BeautifulSoup
 import requests
+import json
 import httplib2
 from googleapiclient import discovery
 import re
@@ -33,7 +34,8 @@ def defaultNames():
     return {'eAddr':'','ePass':'','customerList':[],\
         'customerListDir':'..','customerListFile':'../customerList.csv',\
         'scrapeURL':'https://feeds.capitalbikeshare.com/stations/stations.xml',\
-        'dbBase':'dockHist_','staticTable':'static','dynamicTable':'dynamic',
+        'gbfs_url': r'https://gbfs.capitalbikeshare.com/gbfs/gbfs.json',\
+        'dbBase':'dockHist_','staticTable':'static','dynamicTable':'dynamic',\
         'eFailLogFile':'log_eFail.txt',\
         'gService':'','gServoDatascraper':'','gServoPingbox':'','outgoingMail':[]}
         
@@ -144,6 +146,8 @@ def sendGmail(errLog,sender,recipient,password,subject,body,fileAttach=''):
         # if e is file attachment, send an alert email. Else just print(e)
     return Q
 
+def get_data_gbfs(main_url):
+    pass
     
 def getNewData(thisURL):
     # reads XML file, converts to pandas dataFrame. Each row is one station.
@@ -477,6 +481,10 @@ try:
     http = credentials.authorize(httplib2.Http())
     N['gService'] = discovery.build('gmail', 'v1', http=http)
     outgoingMail = []
+    # initialize DF:
+    
+    
+    
     # main loop
     while True:
         iterStartTime = time.perf_counter()
