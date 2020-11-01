@@ -498,10 +498,7 @@ try:
     # do a single full read here, creating DF
     while True:
         try:
-            df = initialize_dataframe_from_gbfs(N['gbfs_url'])
-            print(df.shape)
-            print('success')
-            h=5/0
+            DF = initialize_dataframe_from_gbfs(N['gbfs_url'])
             break
         except:
             print('%.2f: Failed to retrieve GBFS data. Trying again in %.0f seconds...'\
