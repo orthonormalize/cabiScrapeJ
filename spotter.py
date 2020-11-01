@@ -154,12 +154,12 @@ def initialize_dataframe_from_gbfs(gbfs_url):
                                 .json()['data']['stations'])
     station_status = pd.DataFrame(requests.get(feed_urls['station_status'])\
                                 .json()['data']['stations'])
-    df = station_info.merge(station_status,on='station_id')
+    df = station_info.merge(station_status,on='station_id').set_index('station_id')
     colstarts_drop = ['eightd','external_id','legacy_id','rental_',\
                           'has_kiosk','short_name','electric_bike_surcharge_waiver','station_type']
     colstarts_drop.extend([c for cd in colstarts_drop for c in df.columns if c.startswith(cd)])
     df.drop(colstarts_drop,axis=1,errors='ignore',inplace=True)
-    return(df)
+    return(df,feed_urls['station_status'])
     
 def getNewData(thisURL):
     # reads XML file, converts to pandas dataFrame. Each row is one station.
@@ -498,28 +498,29 @@ try:
     # do a single full read here, creating DF
     while True:
         try:
-            DF = initialize_dataframe_from_gbfs(N['gbfs_url'])
+            (DF,status_url_gbfs) = initialize_dataframe_from_gbfs(N['gbfs_url'])
             break
         except:
             print('%.2f: Failed to retrieve GBFS data. Trying again in %.0f seconds...'\
                               %(time.perf_counter(),P['time_checkPingbox']))
             time.sleep(P['time_checkPingbox'])
     # then during main loop, we will just update station_status
-    print('got here')
     
     # main loop
     while True:
         iterStartTime = time.perf_counter()
         if ((LT['time_readData']+P['time_readData']) < (LT['time_checkPingbox']+P['time_checkPingbox']+P['bufferTime_readData'])):
             print(time.ctime() + ': ' + str(iterStartTime) + ': reading new Data')
-            # scrape new data:
+            # update status data:
             try:
-                [DF_new,rawXML] = getNewData(N['scrapeURL'])
-                DF = DF.append(DF_new, sort=False)
+                df_new = pd.DataFrame(requests.get(status_url_gbfs).json()['data']['stations']).set_index('station_id')
+                DF.update(df_new)
+                LT['time_readData'] = iterStartTime
             except Exception as e:
                 #send alert email if read failed
                 [subject,body] = buildEmailAlert('failed to read CaBi data',str(e),P,dbName(N,dumpCount))
                 Q=sendGmail(N['eFailLogFile'],N['eAddr'],N['eAddr'],N['ePass'],subject,body)
+            
             # check static fields, update if needed:
             try:
                 DF_newITS = (DF_new.copy())[idFields()+timestampFields()+staticFields()]
@@ -547,6 +548,7 @@ try:
                 Q=sendGmail(N['eFailLogFile'],N['eAddr'],N['eAddr'],N['ePass'],subject,body)
                 if Q:
                     LT['time_eStatus'] = time.perf_counter()
+            
         else:
             # process Pingbox:
             try:
