@@ -520,35 +520,6 @@ try:
                 #send alert email if read failed
                 [subject,body] = buildEmailAlert('failed to read CaBi data',str(e),P,dbName(N,dumpCount))
                 Q=sendGmail(N['eFailLogFile'],N['eAddr'],N['eAddr'],N['ePass'],subject,body)
-            
-            # check static fields, update if needed:
-            try:
-                DF_newITS = (DF_new.copy())[idFields()+timestampFields()+staticFields()]
-                DF_newITS = DF_newITS.set_index(DF_newITS.id)
-                [whichStaticsChanged,dStatics] = qChanged_staticFields(DF_newITS,dStatics)
-                dfS = dfS.append(DF_newITS.loc[whichStaticsChanged],sort=False)
-            except Exception as e:
-                [subject,body] = buildEmailAlert('error processing static fields',str(e),P,dbName(N,dumpCount))
-                Q=sendGmail(N['eFailLogFile'],N['eAddr'],N['eAddr'],N['ePass'],subject,body)
-            # write new data:
-            try:
-                [DF,dfS] = writeData2DB(DF,dfS,N,dumpCount,rawXML)
-                LT['time_readData'] = iterStartTime
-            except:
-                pass
-            # if time, email dump or send a beacon:
-            if ((os.path.isfile(dbName(N,dumpCount)))  and  \
-                ((os.path.getsize(dbName(N,dumpCount))>1e6*P['size_eDump'])\
-                                or((iterStartTime>(LT['time_eDump']+P['time_eDump']))))):
-                # send an email dump
-                [Q,LT,dumpCount]=gmailDump_DB(LT,N,dumpCount)
-            elif ((iterStartTime>(LT['time_eStatus']+P['time_eStatus']))):
-                # no dump, but send a beacon:
-                [subject,body] = buildEmailAlert('beacon','',P,dbName(N,dumpCount))
-                Q=sendGmail(N['eFailLogFile'],N['eAddr'],N['eAddr'],N['ePass'],subject,body)
-                if Q:
-                    LT['time_eStatus'] = time.perf_counter()
-            
         else:
             # process Pingbox:
             try:
