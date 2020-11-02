@@ -11,7 +11,7 @@ import httplib2
 from googleapiclient import discovery
 import re
 paramsFile = 'parameters00_cabiScrape.csv'
-locAK = 'Desktop/dev/gmap'
+locAK = 'Desktop/DS/dev/gmap'
 fnAK = 'AK.txt'
 eu_eligChars = ''.join([chr(x) for x in ([45,46,95] + list(range(48,58)) + list(range(64,91)) + list(range(97,123)))])
 sec_2_msec = 1000
@@ -26,7 +26,7 @@ defaultNumRows2Display = 3      # autoresponse output: how many rows are display
 
 def defaultParams():
     return {'time_readData':60,'time_checkPingbox':5,'bufferTime_readData':0.7,\
-                    'time_retryPingboxAutoresponse':15,'time_maxRetrySendingPingboxResponse':230,\
+                    'time_retryPingboxAutoresponse':20,'time_maxRetrySendingPingboxResponse':230,\
                     'time_eStatus':44000,'time_eDump':43170,\
                     'size_eDump':25.0} 
                     
@@ -284,7 +284,10 @@ def getMsgReturnPath(msg):
                 mH = msg['payload']['headers'][h]
                 if (('name' in mH) and ('value' in mH)):
                     if (mH['name']=='Return-Path'):
-                        rp=re.findall(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+",mH['value'])[0]
+                        try:
+                            rp=re.findall(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+",mH['value'])[0]
+                        except:
+                            return('bad customer without return address!') # found msg without 
                         h=len(msg['payload']['headers'])
                 h+=1
     return rp
@@ -305,13 +308,21 @@ def address2LatLong(addr,dfRecent):
     gReq = requests.get(urlBase_ReverseGeocode, params=ddd)
     try:
         gResult = gReq.json()
+        if ('status' in gResult):
+            print(gResult['status'])
+        if ("error_message" in gResult):
+            print(gResult["error_message"])
         numResults = len(gResult['results'])
         if (numResults):
             dLL = gResult['results'][0]['geometry']['location']        # choose first location only
-            return [dLL['lat'],dLL['lng'],numResults,gResult['results'][0]['formatted_address']]
+            if ('formatted_address' in gResult['results'][0]):
+                return [dLL['lat'],dLL['lng'],numResults,gResult['results'][0]['formatted_address']]
+            else:
+                return [dLL['lat'],dLL['lng'],numResults,'address found but no formatted string version available']
         else:
-            return [0.0,0.0,0,'OK but numResults=0']
-    except ValueError:
+            return [0.0,0.0,0,'Query executed but numResults=0']
+    except Exception as e: #ValueError:
+        print(str(e))
         return [0.0,0.0,0,'JSON Decode Error']
 
 
@@ -326,7 +337,7 @@ def interpretPingboxRequest(inText,dfMostRecent):
             if (numAddr):
                 return [1,1,aLat,aLon,gText]
         except:
-            return [0,1,aLat,aLon,'Error: cannot find address: "'+inText+'"'] # m4T=0 ???
+            return [0,1,0.0,0.0,'Error: cannot find address: "'+inText+'"'] # m4T=0 ???
     else:
         return [0,1,0.0,0.0,'Error: no pattern match found for input string']
 
@@ -342,7 +353,7 @@ def roundN(x,n):
 
 def dfRow2autoresponseOutputString(ro):
         # input = one row of df (i.e. one station)
-    outStr = '('+str(ro.nbbikes) + ',' + str(ro.nbemptydocks) + '), '
+    outStr = '('+str(int(ro.num_bikes_available)) + ',' + str(int(ro.num_docks_available)) + '), '
     outStr += directionText(ro.angle) + ' '
     outStr += str(roundN(ro.distance,10)) + 'ft, '
     outStr += str(ro['name']) # tricky: dot vs. [''] for subfield
@@ -353,10 +364,11 @@ def createAutoresponseBody(lat,lon,textAddrOrError,dfR):
     if (textAddrOrError.startswith('Error:')):
         body = [textAddrOrError]
     else: # ping is good
+        dfR=dfR.copy()
         dfR['lat'] = pd.to_numeric(dfR['lat'])
-        dfR['long'] = pd.to_numeric(dfR['long'])
+        dfR['lon'] = pd.to_numeric(dfR['lon'])
         dfR['distNorth'] = deg2rad*(dfR['lat']-lat)*radiusEarth
-        dfR['distEast']  = deg2rad*(dfR['long']-lon)*(np.cos(deg2rad*lat))*radiusEarth
+        dfR['distEast']  = deg2rad*(dfR['lon']-lon)*(np.cos(deg2rad*lat))*radiusEarth
         dfR['distance'] = np.sqrt(dfR['distNorth']**2 + dfR['distEast']**2)
         dfR['angle'] = np.arctan2(dfR['distNorth'],dfR['distEast'])  # radians CCW from east
         dfR = dfR.sort_values('distance')
@@ -366,8 +378,8 @@ def createAutoresponseBody(lat,lon,textAddrOrError,dfR):
         dSpots=0
         for j in range(min(defaultNumRows2Display,len(dfR))):
             psRow = dfR.iloc[j]
-            bSpots += 1 if (psRow.nbbikes>=qLook) else 0
-            dSpots += 1 if (psRow.nbemptydocks>=qLook) else 0
+            bSpots += 1 if (psRow.num_bikes_available>=qLook) else 0
+            dSpots += 1 if (psRow.num_docks_available>=qLook) else 0
             body += [str(1+j) + ': '+dfRow2autoresponseOutputString(psRow)]
         jBase=j+1
         j=jBase
@@ -375,7 +387,7 @@ def createAutoresponseBody(lat,lon,textAddrOrError,dfR):
             body += ['+B']
             while ((bSpots<qUniqSta) and (j<len(dfR)-1)):
                 psRow = dfR.iloc[j]
-                if (psRow.nbbikes>=qLook):
+                if (psRow.num_bikes_available>=qLook):
                     bSpots += 1
                     body += [str(1+j) + ': '+dfRow2autoresponseOutputString(psRow)]
                 j+=1
@@ -384,7 +396,7 @@ def createAutoresponseBody(lat,lon,textAddrOrError,dfR):
             body += ['+D']
             while ((dSpots<qUniqSta) and (j<len(dfR)-1)):
                 psRow = dfR.iloc[j]
-                if (psRow.nbemptydocks>=qLook):
+                if (psRow.num_docks_available>=qLook):
                     dSpots += 1
                     body += [str(1+j) + ': '+dfRow2autoresponseOutputString(psRow)]
                 j+=1
@@ -409,7 +421,7 @@ def writeAutoresponsesAndCleanMailbox(outMail,N,dfRecent):
             if ('INBOX' in mLabs):
                 customer = getMsgReturnPath(msg)
                 print('   Received message from %s' % customer)
-                if ((customer in N['customerList']) or ('911' not in customer)):
+                if ((customer in N['customerList'])):
                     print('     Customer %s found' % customer)
                     [goodPing,mark4Trash,cLat,cLong,textAddrOrError] = interpretPingboxRequest(msg['snippet'],dfRecent)
                     outgoingBody = createAutoresponseBody(cLat,cLong,textAddrOrError,dfRecent)
@@ -499,6 +511,7 @@ try:
     while True:
         try:
             (DF,status_url_gbfs) = initialize_dataframe_from_gbfs(N['gbfs_url'])
+            print(DF.shape)
             break
         except:
             print('%.2f: Failed to retrieve GBFS data. Trying again in %.0f seconds...'\
@@ -524,10 +537,10 @@ try:
             # process Pingbox:
             try:
                 print('                      '+str(iterStartTime) + ': checking Pingbox')
-                [outgoingMail,LT]=processPingbox(outgoingMail,N,P,LT,DF_new)
                 LT['time_checkPingbox'] = iterStartTime
-            except:
-                pass
+                [outgoingMail,LT]=processPingbox(outgoingMail,N,P,LT,DF)
+            except Exception as e:
+                print(str(e))
         # sleep before next task:
         nowTime = time.perf_counter()
         napTime = min(LT['time_readData']+P['time_readData'],LT['time_checkPingbox']+P['time_checkPingbox']) - nowTime
