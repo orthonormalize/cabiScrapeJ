@@ -51,9 +51,9 @@ def get_credentials(json_subApp=''):
 		print('Did not find valid Gmail OAuth credentials ...')
 		flow = client.flow_from_clientsecrets(os.path.join(credential_dir,CLIENT_SECRET_FILE), SCOPES)
 		flow.user_agent = APPLICATION_NAME
-		if flags:
+		if (flags or 99999):  # simple fix: py3 should always use run_flow()
 			credentials = tools.run_flow(flow, store, flags)
-		else: # Needed only for compatibility with Python 2.6
+		else: # Needed only for compatibility with Python 2.6 (old)
 			credentials = tools.run(flow, store)
 		print('Storing credentials to ' + credential_path)
 	return credentials
