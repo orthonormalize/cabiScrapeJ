@@ -10,7 +10,7 @@ The downside: without a smartphone, I was at an information disadvantage. One su
 
 ## Design Criteria
 
-All communications between the app and the mobile device are plaintext SMS. No data services are available.
+All communications between the app and the mobile device are plaintext SMS. No other data services are available at the mobile device.
 
 
 ## Approach
