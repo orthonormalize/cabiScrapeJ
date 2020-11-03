@@ -8,6 +8,11 @@ I started this project in the spring of 2017. At the time I was a flip phone use
 
 The downside: without a smartphone, I was at an information disadvantage. One such disadvantage: I couldn't track bikeshare availability on the go. While many public transit systems continue to provide status info over SMS, bikeshare as urban transit is a phenomenon younger than the smartphone (Capital Bikeshare launched in Sep 2010). When ridership grew, and developers such as Spotcycle began creating apps to assist bikeshare users with their travels, they leveraged smartphone features like location services and map visualizations to build their products. Without a smartphone I could not use these services. To my knowledge, no one had productized a version for SMS that could be used on older phones. So I decided to write one myself. Since I had already built a webscraper to gather system-wide dock status data for another project, I decided to extend it so that I could access the data I needed anywhere on the streets using my flip phone.
 
+## Design Criteria
+
+All communications between the app and the mobile device are plaintext SMS. No data services are available.
+
+
 ## Approach
 
 Capital Bikeshare provides its dock info via XML at https://feeds.capitalbikeshare.com/stations/stations.xml . (2020 update: the legacy data feed has been disabled. CaBi now provides this info over GBFS). This includes real-time bike/dock availability as well as location description and lat/lon for each station.
